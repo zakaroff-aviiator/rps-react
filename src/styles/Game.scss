@@ -132,6 +132,41 @@
       font-size: 1.5rem;
     }
   }
+
+    &__summary {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  &__choices {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  &__choice {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid rgba(51, 65, 85, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  &__choice-name {
+    font-weight: 500;
+  }
+
+  &__choice-value {
+    color: #e5e7eb;
+  }
+
 }
 
 .player-panel {

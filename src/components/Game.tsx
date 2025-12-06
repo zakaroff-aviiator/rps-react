@@ -4,6 +4,13 @@ import { getRandomChoice, getRoundResult } from '../utils/gameLogic';
 import { Scoreboard } from './Scoreboard';
 import { PlayerPanel } from './PlayerPanel';
 
+const choiceDisplay: Record<Choice, string> = {
+  rock: '✊ Rock',
+  paper: '✋ Paper',
+  scissors: '✌️ Scissors',
+};
+
+
 const initialPlayersPvp: [Player, Player] = [
   { id: 1, name: 'Player 1', score: 0, currentChoice: null, isComputer: false },
   { id: 2, name: 'Player 2', score: 0, currentChoice: null, isComputer: false },
@@ -204,9 +211,22 @@ export const Game = () => {
         />
       </div>
 
-      {result && (
-        <div className="game__result">{renderResultText()}</div>
-      )}
+          {result && (
+            <div className="game__summary">
+              <div className="game__result">{renderResultText()}</div>
+              <div className="game__choices">
+                {players.map((p) => (
+                  <div key={p.id} className="game__choice">
+                    <span className="game__choice-name">{p.name}</span>
+                    <span className="game__choice-value">
+                      {p.currentChoice ? choiceDisplay[p.currentChoice] : '—'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
 
       {isComputerVsComputer && (
         <button
