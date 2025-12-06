@@ -36,6 +36,14 @@
     align-items: center;
     gap: 0.5rem;
   }
+    &__play {
+    margin-top: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+  }
+
 
 }
 

@@ -14,6 +14,11 @@ const initialPlayersPve: [Player, Player] = [
   { id: 2, name: 'Computer', score: 0, currentChoice: null, isComputer: true },
 ];
 
+const initialPlayersCvc: [Player, Player] = [
+  { id: 1, name: 'Computer 1', score: 0, currentChoice: null, isComputer: true },
+  { id: 2, name: 'Computer 2', score: 0, currentChoice: null, isComputer: true },
+];
+
 export const Game = () => {
   const [mode, setMode] = useState<GameMode>('pvp');
   const [players, setPlayers] = useState<[Player, Player]>(initialPlayersPvp);
@@ -22,11 +27,14 @@ export const Game = () => {
 
   const resetForMode = (newMode: GameMode) => {
     setMode(newMode);
-    setPlayers(newMode === 'pvp' ? initialPlayersPvp : initialPlayersPve);
+    if (newMode === 'pvp') setPlayers(initialPlayersPvp);
+    if (newMode === 'pve') setPlayers(initialPlayersPve);
+    if (newMode === 'cvc') setPlayers(initialPlayersCvc);
     setResult(null);
     setRound(1);
   };
 
+  // ---------- PvP ----------
   const handleChoicePvp = (playerId: 1 | 2, choice: Choice) => {
     setPlayers(prev => {
       const updated = prev.map(p =>
@@ -51,8 +59,9 @@ export const Game = () => {
     });
   };
 
+  // ---------- PvE ----------
   const handleChoicePve = (playerId: 1 | 2, choice: Choice) => {
-    // Only Player 1 is allowed to choose in PvE
+    // Only human (id=1) can pick
     if (playerId !== 1) return;
 
     const computerChoice = getRandomChoice();
@@ -83,13 +92,45 @@ export const Game = () => {
     });
   };
 
+  // ---------- CvC ----------
+  const playComputerRound = () => {
+    if (result) return; // wait for "Next round" before re-playing same round
+
+    const choice1 = getRandomChoice();
+    const choice2 = getRandomChoice();
+
+    setPlayers(prev => {
+      const updated: [Player, Player] = [
+        { ...prev[0], currentChoice: choice1 },
+        { ...prev[1], currentChoice: choice2 },
+      ];
+
+      const roundResult = getRoundResult(choice1, choice2);
+      setResult(roundResult);
+
+      if (roundResult === 'p1' || roundResult === 'p2') {
+        const winnerIndex = roundResult === 'p1' ? 0 : 1;
+        updated[winnerIndex] = {
+          ...updated[winnerIndex],
+          score: updated[winnerIndex].score + 1,
+        };
+      }
+
+      return updated;
+    });
+  };
+
+  // ---------- Dispatcher ----------
   const handleChoice = (playerId: 1 | 2, choice: Choice) => {
-    if (result) return; // don’t allow new choices after result, wait for next round
+    if (result) return;
 
     if (mode === 'pvp') {
       handleChoicePvp(playerId, choice);
-    } else {
+    } else if (mode === 'pve') {
       handleChoicePve(playerId, choice);
+    } else {
+      // cvc: human doesn't click choices
+      return;
     }
   };
 
@@ -103,16 +144,13 @@ export const Game = () => {
 
   const renderResultText = () => {
     if (!result) return null;
-
     if (result === 'draw') return 'Draw!';
 
-    const winner =
-      result === 'p1'
-        ? players[0]
-        : players[1];
-
+    const winner = result === 'p1' ? players[0] : players[1];
     return `${winner.name} wins this round!`;
   };
+
+  const isComputerVsComputer = mode === 'cvc';
 
   return (
     <div className="game">
@@ -127,6 +165,7 @@ export const Game = () => {
         >
           <option value="pvp">Player vs Player</option>
           <option value="pve">Player vs Computer</option>
+          <option value="cvc">Computer vs Computer</option>
         </select>
       </div>
 
@@ -136,17 +175,27 @@ export const Game = () => {
         <PlayerPanel
           player={players[0]}
           onChoice={handleChoice}
-          disabled={!!result}
+          disabled={!!result || isComputerVsComputer || !!players[0].isComputer}
         />
         <PlayerPanel
           player={players[1]}
           onChoice={handleChoice}
-          disabled={!!result || !!players[1].isComputer} // computer "panel" is read-only
+          disabled={!!result || isComputerVsComputer || !!players[1].isComputer}
         />
       </div>
 
       {result && (
         <div className="game__result">{renderResultText()}</div>
+      )}
+
+      {isComputerVsComputer && (
+        <button
+          className="game__play"
+          onClick={playComputerRound}
+          disabled={!!result}
+        >
+          Play round
+        </button>
       )}
 
       <button className="game__next" onClick={nextRound} disabled={!result}>
