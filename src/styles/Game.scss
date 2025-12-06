@@ -42,6 +42,11 @@
       border-color: #38bdf8;
       box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   }
 }
 
@@ -77,6 +82,11 @@
     &:focus {
       border-color: #a855f7;
       box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
     }
   }
 }
@@ -158,15 +168,86 @@
   justify-content: center;
   align-items: center;
   padding: 1rem 1.5rem;
-  min-width: 0; /* avoid overflow on small screens */
-}
-
-/* Remove card borders/background to avoid visible separation */
-.player-panel {
+  min-width: 0;
   background: transparent;
   border: none;
 }
 
+/* HAND + ANIMATION */
+.player-panel__hand {
+  font-size: 3.2rem;
+  height: 3.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.6rem;
+}
+
+.player-panel__hand--animate-left {
+  animation: rps-hand-left 0.9s ease-in-out;
+  transform-origin: center right;
+}
+
+.player-panel__hand--animate-right {
+  animation: rps-hand-right 0.9s ease-in-out;
+  transform-origin: center left;
+}
+
+@keyframes rps-hand-left {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(18px);
+  }
+  30% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(18px);
+  }
+  60% {
+    transform: translateX(0);
+  }
+  75% {
+    transform: translateX(18px);
+  }
+  90% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rps-hand-right {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-18px);
+  }
+  30% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-18px);
+  }
+  60% {
+    transform: translateX(0);
+  }
+  75% {
+    transform: translateX(-18px);
+  }
+  90% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* PLAYER CONTENT */
 .player-panel__name {
   font-size: 1.1rem;
   font-weight: 600;

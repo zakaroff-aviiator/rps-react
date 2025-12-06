@@ -1,6 +1,6 @@
 export type Choice = 'rock' | 'paper' | 'scissors';
 
-export type GameMode = 'pvp' | 'pve';
+export type GameMode = 'pvp' | 'pve' | 'cvc';
 
 export interface Player {
   id: 1 | 2;
