@@ -34,6 +34,14 @@ export const Game = () => {
     setRound(1);
   };
 
+  const handleNameChange = (playerId: 1 | 2, name: string) => {
+    setPlayers(prev =>
+      prev.map(p =>
+        p.id === playerId ? { ...p, name } : p
+      ) as [Player, Player]
+    );
+  };
+
   // ---------- PvP ----------
   const handleChoicePvp = (playerId: 1 | 2, choice: Choice) => {
     setPlayers(prev => {
@@ -61,7 +69,6 @@ export const Game = () => {
 
   // ---------- PvE ----------
   const handleChoicePve = (playerId: 1 | 2, choice: Choice) => {
-    // Only human (id=1) can pick
     if (playerId !== 1) return;
 
     const computerChoice = getRandomChoice();
@@ -94,7 +101,7 @@ export const Game = () => {
 
   // ---------- CvC ----------
   const playComputerRound = () => {
-    if (result) return; // wait for "Next round" before re-playing same round
+    if (result) return;
 
     const choice1 = getRandomChoice();
     const choice2 = getRandomChoice();
@@ -129,7 +136,6 @@ export const Game = () => {
     } else if (mode === 'pve') {
       handleChoicePve(playerId, choice);
     } else {
-      // cvc: human doesn't click choices
       return;
     }
   };
@@ -167,6 +173,20 @@ export const Game = () => {
           <option value="pve">Player vs Computer</option>
           <option value="cvc">Computer vs Computer</option>
         </select>
+      </div>
+
+      <div className="game__names">
+        {players.map(p => (
+          <div key={p.id} className="game__name-field">
+            <label htmlFor={`player-name-${p.id}`}>Player {p.id} name</label>
+            <input
+              id={`player-name-${p.id}`}
+              type="text"
+              value={p.name}
+              onChange={(e) => handleNameChange(p.id, e.target.value)}
+            />
+          </div>
+        ))}
       </div>
 
       <Scoreboard players={players} round={round} result={result} />
