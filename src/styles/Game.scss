@@ -1,0 +1,72 @@
+.game {
+  min-height: 100vh;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+
+  &__title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  &__players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 800px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__result {
+    font-weight: 600;
+  }
+
+  &__next {
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+.player-panel {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  flex: 1 1 260px;
+
+  &__name {
+    margin-bottom: 0.5rem;
+  }
+
+  &__choices {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.choice-button {
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  cursor: pointer;
+
+  &--active {
+    border-width: 2px;
+  }
+}
+
+.scoreboard {
+  text-align: center;
+
+  &__scores {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 0.3rem;
+  }
+}
