@@ -1,4 +1,5 @@
 import type { Choice } from '../types/game';
+import { Button } from '@mui/material';
 
 interface Props {
   choice: Choice;
@@ -13,14 +14,30 @@ const choiceLabels: Record<Choice, string> = {
   scissors: '✌️ Scissors',
 };
 
+const choiceColor: Record<Choice, 'warning' | 'info' | 'error'> = {
+  rock: 'warning',
+  paper: 'info',
+  scissors: 'error',
+};
+
 export const ChoiceButton = ({ choice, isActive, disabled, onClick }: Props) => {
   return (
-    <button
-      className={`choice-button choice-button--${choice} ${isActive ? 'choice-button--active' : ''}`}
+    <Button
+      variant={isActive ? 'contained' : 'outlined'}
+      color={choiceColor[choice]}
       disabled={disabled}
       onClick={onClick}
+      fullWidth
+      sx={{
+        borderRadius: 999,
+        textTransform: 'none',
+        justifyContent: 'flex-start',
+        px: 2,
+        py: 1,
+        fontWeight: isActive ? 600 : 500,
+      }}
     >
       {choiceLabels[choice]}
-    </button>
+    </Button>
   );
 };

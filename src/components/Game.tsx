@@ -3,6 +3,19 @@ import type { Choice, Player, Result, GameMode } from '../types/game';
 import { getRandomChoice, getRoundResult } from '../utils/gameLogic';
 import { Scoreboard } from './Scoreboard';
 import { PlayerPanel } from './PlayerPanel';
+import { BackgroundFX } from './BackgroundFX';
+
+import {
+  Box,
+  Stack,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Button,
+} from '@mui/material';
 
 const choiceDisplay: Record<Choice, string> = {
   rock: '✊ Rock',
@@ -25,12 +38,15 @@ const initialPlayersCvc: [Player, Player] = [
   { id: 2, name: 'Computer 2', score: 0, currentChoice: null, isComputer: true },
 ];
 
+type PlayerOutcome = 'win' | 'lose' | 'draw' | 'none';
+
 export const Game = () => {
   const [mode, setMode] = useState<GameMode>('pvp');
   const [players, setPlayers] = useState<[Player, Player]>(initialPlayersPvp);
   const [result, setResult] = useState<Result>(null);
   const [round, setRound] = useState(1);
-  const [isRevealing, setIsRevealing] = useState(false); // for hand animation
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [bgPulse, setBgPulse] = useState(0); // drives cyber flash
 
   const resetForMode = (newMode: GameMode) => {
     setMode(newMode);
@@ -48,12 +64,10 @@ export const Game = () => {
     );
   };
 
-  // common reveal logic with hand animation
   const startReveal = (p1Choice: Choice, p2Choice: Choice) => {
     setIsRevealing(true);
     setResult(null);
 
-    // 0.9s = duration of the hand shake animation
     setTimeout(() => {
       const roundResult = getRoundResult(p1Choice, p2Choice);
       setResult(roundResult);
@@ -66,6 +80,9 @@ export const Game = () => {
           ) as [Player, Player]
         );
       }
+
+      // trigger cyber arena flash on every completed round
+      setBgPulse((prev) => prev + 1);
 
       setIsRevealing(false);
     }, 900);
@@ -128,7 +145,6 @@ export const Game = () => {
     });
   };
 
-  // ---------- Dispatcher ----------
   const handleChoice = (playerId: 1 | 2, choice: Choice) => {
     if (result || isRevealing) return;
 
@@ -136,9 +152,6 @@ export const Game = () => {
       handleChoicePvp(playerId, choice);
     } else if (mode === 'pve') {
       handleChoicePve(playerId, choice);
-    } else {
-      // cvc: human doesn’t click choices
-      return;
     }
   };
 
@@ -155,109 +168,216 @@ export const Game = () => {
   const renderResultText = () => {
     if (!result) return null;
     if (result === 'draw') return 'Draw!';
-
     const winner = result === 'p1' ? players[0] : players[1];
     return `${winner.name} wins this round!`;
   };
 
   const isComputerVsComputer = mode === 'cvc';
 
+  const getPlayerOutcome = (playerId: 1 | 2): PlayerOutcome => {
+    if (!result) return 'none';
+    if (result === 'draw') return 'draw';
+    const winnerId = result === 'p1' ? 1 : 2;
+    return playerId === winnerId ? 'win' : 'lose';
+  };
+
   return (
-    <div className="game">
-      <h1 className="game__title">Rock · Paper · Scissors</h1>
+    <>
+      {/* background lives behind everything */}
+      <BackgroundFX pulseKey={bgPulse} />
 
-      <div className="game__mode">
-        <label htmlFor="mode">Mode: </label>
-        <select
-          id="mode"
-          value={mode}
-          onChange={(e) => resetForMode(e.target.value as GameMode)}
-          disabled={isRevealing}
-        >
-          <option value="pvp">Player vs Player</option>
-          <option value="pve">Player vs Computer</option>
-          <option value="cvc">Computer vs Computer</option>
-        </select>
-      </div>
-
-      <div className="game__names">
-        {players.map(p => (
-          <div key={p.id} className="game__name-field">
-            <label htmlFor={`player-name-${p.id}`}>Player {p.id} name</label>
-            <input
-              id={`player-name-${p.id}`}
-              type="text"
-              value={p.name}
-              onChange={(e) => handleNameChange(p.id, e.target.value)}
-              disabled={isRevealing}
-            />
-          </div>
-        ))}
-      </div>
-
-      <Scoreboard players={players} round={round} result={result} />
-
-      <div className="game__players">
-        <PlayerPanel
-          player={players[0]}
-          onChoice={handleChoice}
-          disabled={
-            !!result ||
-            isRevealing ||
-            isComputerVsComputer ||
-            !!players[0].isComputer
-          }
-          isRevealing={isRevealing}
-          side="left"
-        />
-        <PlayerPanel
-          player={players[1]}
-          onChoice={handleChoice}
-          disabled={
-            !!result ||
-            isRevealing ||
-            isComputerVsComputer ||
-            !!players[1].isComputer
-          }
-          isRevealing={isRevealing}
-          side="right"
-        />
-      </div>
-
-      {/* show result & choices only after animation */}
-      {result && !isRevealing && (
-        <div className="game__summary">
-          <div className="game__result">{renderResultText()}</div>
-          <div className="game__choices">
-            {players.map((p) => (
-              <div key={p.id} className="game__choice">
-                <span className="game__choice-name">{p.name}</span>
-                <span className="game__choice-value">
-                  {p.currentChoice ? choiceDisplay[p.currentChoice] : '—'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isComputerVsComputer && (
-        <button
-          className="game__play"
-          onClick={playComputerRound}
-          disabled={!!result || isRevealing}
-        >
-          Play round
-        </button>
-      )}
-
-      <button
-        className="game__next"
-        onClick={nextRound}
-        disabled={!result || isRevealing}
+    <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          py: 4,
+          position: 'relative',
+          zIndex: 1,  // IMPORTANT: game above background
+        }}
       >
-        Next round
-      </button>
-    </div>
+        <Box sx={{ width: '100vw' }}>
+          <Box
+            sx={{
+              maxWidth: 1200,
+              mx: 'auto',
+              px: { xs: 2, md: 4 },
+            }}
+          >
+            <Stack
+              spacing={3}
+              sx={{
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              {/* Title */}
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Rock · Paper · Scissors
+              </Typography>
+
+              {/* Mode + names */}
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                sx={{
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel id="mode-label">Mode</InputLabel>
+                  <Select
+                    labelId="mode-label"
+                    id="mode"
+                    value={mode}
+                    label="Mode"
+                    onChange={(e) => resetForMode(e.target.value as GameMode)}
+                    disabled={isRevealing}
+                  >
+                    <MenuItem value="pvp">Player vs Player</MenuItem>
+                    <MenuItem value="pve">Player vs Computer</MenuItem>
+                    <MenuItem value="cvc">Computer vs Computer</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={2}
+                  sx={{ flex: 1 }}
+                >
+                  {players.map((p) => (
+                    <TextField
+                      key={p.id}
+                      size="small"
+                      label={`Player ${p.id} name`}
+                      value={p.name}
+                      onChange={(e) => handleNameChange(p.id, e.target.value)}
+                      disabled={isRevealing}
+                      sx={{ flex: 1, minWidth: 0 }}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+
+              {/* Scoreboard */}
+              <Scoreboard players={players} round={round} result={result} />
+
+              {/* Arena */}
+              <Box
+                sx={{
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  alignItems: 'stretch',
+                  justifyContent: 'center',
+                  gap: 3,
+                }}
+              >
+                <PlayerPanel
+                  player={players[0]}
+                  onChoice={handleChoice}
+                  disabled={
+                    !!result ||
+                    isRevealing ||
+                    isComputerVsComputer ||
+                    !!players[0].isComputer
+                  }
+                  isRevealing={isRevealing}
+                  side="left"
+                  outcome={getPlayerOutcome(1)}
+                />
+
+                <PlayerPanel
+                  player={players[1]}
+                  onChoice={handleChoice}
+                  disabled={
+                    !!result ||
+                    isRevealing ||
+                    isComputerVsComputer ||
+                    !!players[1].isComputer
+                  }
+                  isRevealing={isRevealing}
+                  side="right"
+                  outcome={getPlayerOutcome(2)}
+                />
+              </Box>
+
+              {/* Summary + controls */}
+              <Stack spacing={1.5} alignItems="center" sx={{ pb: 1 }}>
+                {result && !isRevealing && (
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      align="center"
+                      sx={{ fontWeight: 700, color: '#f9fafb' }}
+                    >
+                      {renderResultText()}
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      justifyContent="center"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {players.map((p) => (
+                        <Box
+                          key={p.id}
+                          sx={{
+                            px: 1.5,
+                            py: 0.4,
+                            borderRadius: 999,
+                            bgcolor: 'rgba(15,23,42,0.7)',
+                            border: '1px solid rgba(94,234,212,0.5)',
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          <strong>{p.name}:</strong>{' '}
+                          <span style={{ color: '#a5b4fc' }}>
+                            {p.currentChoice ? choiceDisplay[p.currentChoice] : '—'}
+                          </span>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                <Stack direction="row" spacing={2} justifyContent="center">
+                  {isComputerVsComputer && (
+                    <Button
+                      variant="contained"
+                      color="info"
+                      onClick={playComputerRound}
+                      disabled={!!result || isRevealing}
+                    >
+                      Play round
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={nextRound}
+                    disabled={!result || isRevealing}
+                  >
+                    Next round
+                  </Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          </Box>
+        </Box>
+      </Box>
+    </>
   );
 };
