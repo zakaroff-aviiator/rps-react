@@ -12,3 +12,9 @@ export const getRoundResult = (p1: Choice, p2: Choice): Result => {
   if (winsAgainst[p1] === p2) return 'p1';
   return 'p2';
 };
+
+export const getRandomChoice = (): Choice => {
+  const choices: Choice[] = ['rock', 'paper', 'scissors'];
+  const index = Math.floor(Math.random() * choices.length);
+  return choices[index];
+};
