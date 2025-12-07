@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# Jan-Ken-Pon
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ce projet propose une implémentation interactive du jeu Pierre–Feuille–Ciseaux utilisant React, TypeScript et Vite.
+L’application inclut trois modes de jeu, une interface animée et une gestion simple des effets sonores.
 
-Currently, two official plugins are available:
+## Fonctionnalités
+- Trois modes : Joueur vs Joueur, Joueur vs Ordinateur, Ordinateur vs Ordinateur
+- Personnalisation des noms de joueurs
+- Animation de révélation synchronisée
+- Score automatique (victoire à 5 points)
+- Effets sonores (clic, révélation, victoire)
+- Interface responsive
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation et exécution
 
-## React Compiler
+# Vérification de la version Node.js (recommandé : 18+)
+```node -v```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Clonage du dépôt
+```git clone https://github.com/zakaroff-aviiator/rps-react.git```
 
-## Expanding the ESLint configuration
+# Accès au répertoire du projet
+```cd rps-react```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Installation des dépendances
+```npm install```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+# Lancement en mode développement
+```npm run dev```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Construction du build de production (optionnel)
+```npm run build```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# Prévisualisation du build (optionnel)
+```npm run preview```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+# Création du dossier des sons (si nécessaire)
+```mkdir -p public/sounds```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# Les fichiers suivants doivent être ajoutés dans public/sounds :
+```click.mp3```
+```reveal.mp3```
+```win.mp3```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# En cas d’erreur d'installation
+```rm -rf node_modules```
+```npm install```
+
+## Structure du projet
+
+src/
+  components/
+    Game.tsx
+    PlayerPanel.tsx
+    Scoreboard.tsx
+    ChoiceButton.tsx
+    BackgroundFX.tsx
+    LogoJanKenPon.tsx
+  utils/
+    gameLogic.ts
+  types/
+    game.ts
+public/
+  sounds/
+
+## Notes
+- L’animation de révélation utilise une temporisation synchronisée (900 ms)
+- La logique du jeu est centralisée dans utils/gameLogic.ts
+- Les fichiers audio doivent exister localement pour éviter les erreurs
+
+## Licence
+MIT
