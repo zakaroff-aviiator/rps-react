@@ -14,40 +14,61 @@ L’application inclut trois modes de jeu, une interface animée et une gestion 
 ## Installation et exécution
 
 # Vérification de la version Node.js (recommandé : 18+)
-```node -v```
+```
+node -v
+```
 
 # Clonage du dépôt
-```git clone https://github.com/zakaroff-aviiator/rps-react.git```
+```
+git clone https://github.com/zakaroff-aviiator/rps-react.git
+```
 
 # Accès au répertoire du projet
-```cd rps-react```
+```
+cd rps-react
+```
 
 # Installation des dépendances
-```npm install```
+```
+npm install
+```
 
 # Lancement en mode développement
-```npm run dev```
+```
+npm run dev
+```
 
 # Construction du build de production (optionnel)
-```npm run build```
+```
+npm run build
+```
 
 # Prévisualisation du build (optionnel)
-```npm run preview```
+```
+npm run preview
+```
 
 # Création du dossier des sons (si nécessaire)
-```mkdir -p public/sounds```
+```
+mkdir -p public/sounds
+```
 
 # Les fichiers suivants doivent être ajoutés dans public/sounds :
-```click.mp3```
-```reveal.mp3```
-```win.mp3```
+```
+   click.mp3
+   reveal.mp3
+   win.mp3
+```
 
 # En cas d’erreur d'installation
-```rm -rf node_modules```
-```npm install```
+```
+   rm -rf node_modules
+   npm install
+```
 
 ## Structure du projet
 
+```
 src/
   components/
     Game.tsx
@@ -62,6 +83,7 @@ src/
     game.ts
 public/
   sounds/
+```
 
 ## Notes
 - L’animation de révélation utilise une temporisation synchronisée (900 ms)
