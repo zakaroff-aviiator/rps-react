@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Choice, Player, Result, GameMode } from '../types/game';
 import { getRandomChoice, getRoundResult } from '../utils/gameLogic';
 import { Scoreboard } from './Scoreboard';
 import { PlayerPanel } from './PlayerPanel';
 import { BackgroundFX } from './BackgroundFX';
+import { LogoJanKenPon } from './LogoJanKenPon';
 
 import {
   Box,
@@ -40,13 +41,40 @@ const initialPlayersCvc: [Player, Player] = [
 
 type PlayerOutcome = 'win' | 'lose' | 'draw' | 'none';
 
+const MATCH_TARGET = 5; // first to 5 wins the match
+
 export const Game = () => {
   const [mode, setMode] = useState<GameMode>('pvp');
   const [players, setPlayers] = useState<[Player, Player]>(initialPlayersPvp);
   const [result, setResult] = useState<Result>(null);
   const [round, setRound] = useState(1);
   const [isRevealing, setIsRevealing] = useState(false);
-  const [bgPulse, setBgPulse] = useState(0); // drives cyber flash
+  const [bgPulse, setBgPulse] = useState(0);
+  const [matchWinner, setMatchWinner] = useState<Player | null>(null);
+
+  const revealIdRef = useRef(0);
+
+  // sound refs
+  const clickSoundRef = useRef<HTMLAudioElement | null>(null);
+  const revealSoundRef = useRef<HTMLAudioElement | null>(null);
+  const winSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    clickSoundRef.current = new Audio('/sounds/click.mp3');
+    revealSoundRef.current = new Audio('/sounds/reveal.mp3');
+    winSoundRef.current = new Audio('/sounds/win.mp3');
+  }, []);
+
+  const playSound = (ref: React.RefObject<HTMLAudioElement | null>) => {
+    const el = ref.current;
+    if (!el) return;
+    try {
+      el.currentTime = 0;
+      void el.play();
+    } catch {
+      // ignore
+    }
+  };
 
   const resetForMode = (newMode: GameMode) => {
     setMode(newMode);
@@ -56,6 +84,8 @@ export const Game = () => {
     setResult(null);
     setRound(1);
     setIsRevealing(false);
+    setMatchWinner(null);
+    revealIdRef.current = 0;
   };
 
   const handleNameChange = (playerId: 1 | 2, name: string) => {
@@ -64,33 +94,58 @@ export const Game = () => {
     );
   };
 
+  const resetMatch = () => {
+    setPlayers(prev =>
+      prev.map(p => ({ ...p, score: 0, currentChoice: null })) as [Player, Player]
+    );
+    setResult(null);
+    setRound(1);
+    setMatchWinner(null);
+    revealIdRef.current = 0;
+  };
+
+  // ---------- Common reveal logic ----------
   const startReveal = (p1Choice: Choice, p2Choice: Choice) => {
+    const myId = revealIdRef.current + 1;
+    revealIdRef.current = myId;
+
     setIsRevealing(true);
     setResult(null);
+    playSound(revealSoundRef);
 
     setTimeout(() => {
+      if (revealIdRef.current !== myId) return;
+
       const roundResult = getRoundResult(p1Choice, p2Choice);
       setResult(roundResult);
 
       if (roundResult === 'p1' || roundResult === 'p2') {
-        const winnerId = roundResult === 'p1' ? 1 : 2;
-        setPlayers(prev =>
-          prev.map(p =>
-            p.id === winnerId ? { ...p, score: p.score + 1 } : p
-          ) as [Player, Player]
-        );
+        const winnerIndex = roundResult === 'p1' ? 0 : 1;
+        setPlayers(prev => {
+          const updated = prev.map((p, idx) =>
+            idx === winnerIndex ? { ...p, score: p.score + 1 } : p
+          ) as [Player, Player];
+
+          // match win check
+          if (updated[winnerIndex].score >= MATCH_TARGET) {
+            setMatchWinner(updated[winnerIndex]);
+            playSound(winSoundRef);
+          }
+
+          return updated;
+        });
       }
 
-      // trigger cyber arena flash on every completed round
-      setBgPulse((prev) => prev + 1);
-
+      setBgPulse(prev => prev + 1);
       setIsRevealing(false);
     }, 900);
   };
 
   // ---------- PvP ----------
   const handleChoicePvp = (playerId: 1 | 2, choice: Choice) => {
-    if (isRevealing) return;
+    if (isRevealing || matchWinner) return;
+
+    playSound(clickSoundRef);
 
     setPlayers(prev => {
       const updated = prev.map(p =>
@@ -98,8 +153,7 @@ export const Game = () => {
       ) as [Player, Player];
 
       const [p1, p2] = updated;
-
-      if (p1.currentChoice && p2.currentChoice) {
+      if (p1.currentChoice && p2.currentChoice && !isRevealing) {
         startReveal(p1.currentChoice as Choice, p2.currentChoice as Choice);
       }
 
@@ -109,7 +163,9 @@ export const Game = () => {
 
   // ---------- PvE ----------
   const handleChoicePve = (playerId: 1 | 2, choice: Choice) => {
-    if (playerId !== 1 || isRevealing) return;
+    if (playerId !== 1 || isRevealing || matchWinner) return;
+
+    playSound(clickSoundRef);
 
     const computerChoice = getRandomChoice();
 
@@ -128,7 +184,7 @@ export const Game = () => {
 
   // ---------- CvC ----------
   const playComputerRound = () => {
-    if (result || isRevealing) return;
+    if (result || isRevealing || matchWinner) return;
 
     const choice1 = getRandomChoice();
     const choice2 = getRandomChoice();
@@ -145,8 +201,9 @@ export const Game = () => {
     });
   };
 
+  // ---------- Dispatcher ----------
   const handleChoice = (playerId: 1 | 2, choice: Choice) => {
-    if (result || isRevealing) return;
+    if (result || isRevealing || matchWinner) return;
 
     if (mode === 'pvp') {
       handleChoicePvp(playerId, choice);
@@ -156,7 +213,7 @@ export const Game = () => {
   };
 
   const nextRound = () => {
-    if (isRevealing) return;
+    if (isRevealing || matchWinner) return;
 
     setPlayers(prev =>
       prev.map(p => ({ ...p, currentChoice: null })) as [Player, Player]
@@ -183,10 +240,9 @@ export const Game = () => {
 
   return (
     <>
-      {/* background lives behind everything */}
       <BackgroundFX pulseKey={bgPulse} />
 
-    <Box
+      <Box
         sx={{
           minHeight: '100vh',
           display: 'flex',
@@ -194,7 +250,7 @@ export const Game = () => {
           justifyContent: 'center',
           py: 4,
           position: 'relative',
-          zIndex: 1,  // IMPORTANT: game above background
+          zIndex: 1,
         }}
       >
         <Box sx={{ width: '100vw' }}>
@@ -212,17 +268,8 @@ export const Game = () => {
                 textAlign: 'center',
               }}
             >
-              {/* Title */}
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Rock · Paper · Scissors
-              </Typography>
+              {/* Logo */}
+              <LogoJanKenPon />
 
               {/* Mode + names */}
               <Stack
@@ -290,7 +337,8 @@ export const Game = () => {
                     !!result ||
                     isRevealing ||
                     isComputerVsComputer ||
-                    !!players[0].isComputer
+                    !!players[0].isComputer ||
+                    !!matchWinner
                   }
                   isRevealing={isRevealing}
                   side="left"
@@ -304,7 +352,8 @@ export const Game = () => {
                     !!result ||
                     isRevealing ||
                     isComputerVsComputer ||
-                    !!players[1].isComputer
+                    !!players[1].isComputer ||
+                    !!matchWinner
                   }
                   isRevealing={isRevealing}
                   side="right"
@@ -314,7 +363,7 @@ export const Game = () => {
 
               {/* Summary + controls */}
               <Stack spacing={1.5} alignItems="center" sx={{ pb: 1 }}>
-                {result && !isRevealing && (
+                {result && !isRevealing && !matchWinner && (
                   <Box>
                     <Typography
                       variant="h6"
@@ -358,7 +407,7 @@ export const Game = () => {
                       variant="contained"
                       color="info"
                       onClick={playComputerRound}
-                      disabled={!!result || isRevealing}
+                      disabled={!!result || isRevealing || !!matchWinner}
                     >
                       Play round
                     </Button>
@@ -368,7 +417,7 @@ export const Game = () => {
                     variant="contained"
                     color="primary"
                     onClick={nextRound}
-                    disabled={!result || isRevealing}
+                    disabled={!result || isRevealing || !!matchWinner}
                   >
                     Next round
                   </Button>
@@ -377,6 +426,81 @@ export const Game = () => {
             </Stack>
           </Box>
         </Box>
+
+        {/* Victory overlay */}
+        {matchWinner && (
+          <Box
+            sx={{
+              position: 'fixed',
+              inset: 0,
+              background:
+                'radial-gradient(circle at center, rgba(15,23,42,0.92), rgba(15,23,42,0.98))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+            }}
+          >
+            <Box
+              sx={{
+                px: 4,
+                py: 3,
+                borderRadius: 4,
+                bgcolor: 'rgba(15,23,42,0.98)',
+                border: '1px solid rgba(94,234,212,0.7)',
+                boxShadow: '0 25px 60px rgba(15,23,42,1)',
+                textAlign: 'center',
+                maxWidth: 420,
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  letterSpacing: '0.3em',
+                  textTransform: 'uppercase',
+                  color: '#38bdf8',
+                }}
+              >
+                Match Winner
+              </Typography>
+              <Typography
+                variant="h4"
+                sx={{
+                  mt: 1,
+                  fontWeight: 800,
+                  color: '#f9fafb',
+                  textShadow: '0 0 18px rgba(34,197,94,0.9)',
+                }}
+              >
+                {matchWinner.name}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, color: '#cbd5f5' }}
+              >
+                First to {MATCH_TARGET} points.
+              </Typography>
+
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="center"
+                sx={{ mt: 3 }}
+              >
+                <Button variant="outlined" color="info" onClick={resetMatch}>
+                  Play again
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => resetForMode(mode)}
+                >
+                  Reset mode
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
+        )}
       </Box>
     </>
   );

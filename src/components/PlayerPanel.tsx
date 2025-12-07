@@ -50,7 +50,7 @@ export const PlayerPanel = ({
         : 'player-panel__hand--animate-right'
       : '');
 
-  // outcome-based animation (scale / slight shake / opacity)
+  // outcome-based animation (win / lose / draw)
   const outcomeAnimation =
     outcome === 'win'
       ? { scale: 1.04, y: -2, opacity: 1 }
@@ -60,7 +60,6 @@ export const PlayerPanel = ({
       ? { scale: 1.02, y: 0, opacity: 1 }
       : { scale: 1, y: 0, opacity: 1 };
 
-  // border color by outcome
   let borderColor = 'transparent';
   if (outcome === 'win') borderColor = 'rgba(34,197,94,0.9)';
   else if (outcome === 'lose') borderColor = 'rgba(248,113,113,0.7)';
@@ -93,6 +92,7 @@ export const PlayerPanel = ({
               : '0 0 18px rgba(15,23,42,0.9)',
         }}
       >
+        {/* Hand with reveal animation */}
         <Box className={handClass} sx={{ mb: 1.5 }}>
           <motion.span
             key={player.currentChoice ?? 'none'}
@@ -103,12 +103,16 @@ export const PlayerPanel = ({
               stiffness: 320,
               damping: 18,
             }}
-            style={{ fontSize: '3.4rem', display: 'inline-block' }}
+            style={{
+              fontSize: '3.4rem',
+              display: 'inline-block',
+            }}
           >
             {displayedHand}
           </motion.span>
         </Box>
 
+        {/* Player name */}
         <Typography
           variant="h6"
           sx={{
@@ -121,6 +125,7 @@ export const PlayerPanel = ({
           {player.name}
         </Typography>
 
+        {/* Choices */}
         <Stack spacing={1} sx={{ width: '100%', maxWidth: 320 }}>
           {choices.map((choice) => (
             <ChoiceButton
